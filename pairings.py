@@ -2,7 +2,6 @@ import sys
 import re
 import argparse
 import numpy as np
-# todo condition "pairs" is wrong
 
 
 def get_pairings_num_dynamic(sequence):
@@ -26,18 +25,13 @@ def get_pairings_num_dynamic(sequence):
     for k in range(5, length):
         for i in range(0, length-k):
             j = i + k
-            if pairs(sequence[i], sequence[j]):
-                possible_ts = []
-                for t in range(i + 1, j - 1):
-                    possible_ts.append(
-                        1 + results[i, t - 1] + results[t + 1, j]
+            possible_values = [results[i, j - 1]]
+            for t in range(i, j-1):
+                if pairs(sequence[t], sequence[j]):
+                    possible_values.append(
+                        1 + results[i, t - 1] + results[t + 1, j-1]
                     )
-                results[i, j] = max(
-                    results[i, j-1],
-                    max(possible_ts)
-                )
-            else:
-                results[i, j] = results[i, j - 1]
+            results[i, j] = max(possible_values)
 
     return results[0, length - 1]
 
@@ -57,14 +51,13 @@ def get_pairings_num_recursive(sequence, start, end):
     if end < start + 5:
         return 0
 
-    if not pairs(sequence[start], sequence[end]):
-        return get_pairings_num_recursive(sequence, start, end - 1)
+    possible_ts = [get_pairings_num_recursive(sequence, start, end-1)]
+    for t in range(start, end-1):
+        if pairs(sequence[t], sequence[end]):
+            possible_ts.append(
+                1 + get_pairings_num_recursive(sequence, start, t-1) + get_pairings_num_recursive(sequence, t+1, end-1)
+            )
 
-    possible_ts = []
-    for t in range(start + 1, end - 1):
-        possible_ts.append(
-            1 + get_pairings_num_recursive(sequence, start, t - 1) + get_pairings_num_recursive(sequence, t + 1, end)
-        )
     return max(possible_ts)
 
 
